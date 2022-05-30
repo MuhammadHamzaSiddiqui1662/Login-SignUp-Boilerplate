@@ -9,7 +9,7 @@ import {
   Grid,
   Typography,
 } from "@mui/material";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const validationSchema = yup.object({
   firstName: yup
@@ -26,7 +26,10 @@ const validationSchema = yup.object({
     .required("Password is required"),
 });
 
-const SignUp = ({ classes }) => {
+const SignUp = ({ classes, setUser, setLoading }) => {
+
+  const navigate = useNavigate();
+
   const formik = useFormik({
     initialValues: {
       firstName: "",
@@ -36,14 +39,29 @@ const SignUp = ({ classes }) => {
     },
     validationSchema: validationSchema,
     onSubmit: (values) => {
-      alert(JSON.stringify(values, null, 2));
+      setLoading(true);
       createUser(values);
     },
   });
-  const createUser = async values => {
-    const users = await axios.get('http://localhost:5000/todo/');
-    console.log(users);
+
+  const createUser = async ({ firstName, lastName, email, password }) => {
+    const res = await axios.get(`http://localhost:5000/todo?email=${email}`);
+    if (res.data.length === 0) {
+      const user = await axios.post('http://localhost:5000/todo/users', {
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+        password: password
+      })
+      setUser(user.data);
+    }
+    else {
+      alert("User with this email already exist,\nTry with any other email.");
+    }
+    setLoading(false);
+    navigate("/todo");
   }
+
   return (
     <form onSubmit={formik.handleSubmit} className={classes.form}>
       <Grid className={classes.container} container sm={12} spacing={2}>

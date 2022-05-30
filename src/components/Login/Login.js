@@ -9,7 +9,7 @@ import {
   Grid,
   Typography,
 } from "@mui/material";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const validationSchema = yup.object({
   email: yup
@@ -22,7 +22,9 @@ const validationSchema = yup.object({
     .required("Password is required"),
 });
 
-const Login = ({ classes }) => {
+const Login = ({ classes, setUser, setLoading }) => {
+
+  const navigate = useNavigate();
   const formik = useFormik({
     initialValues: {
       email: "",
@@ -30,14 +32,22 @@ const Login = ({ classes }) => {
     },
     validationSchema: validationSchema,
     onSubmit: (values) => {
-      alert(JSON.stringify(values, null, 2));
+      setLoading(true);
       verifyUser(values);
     },
   });
+
   const verifyUser = async ({ email, password }) => {
-    const user = await axios.get(`http://localhost:5000/todo?email=${email}&password=${password}`);
-    console.log(user);
+    try {
+      const user = await axios.get(`http://localhost:5000/todo?email=${email}&password=${password}`);
+      setUser(user.data[0]);
+      setLoading(false);
+      navigate("/todo")
+    } catch (error) {
+      alert("email and password combination is not correct")
+    }
   }
+
   return (
     <form onSubmit={formik.handleSubmit} className={classes.form}>
       <Grid className={classes.container} container sm={12} spacing={2}>
@@ -82,6 +92,7 @@ const Login = ({ classes }) => {
         </Grid>
         <Grid item sm={12}>
           <p>Don't have any account? <Link to="/signup"><b>Register</b></Link> here.</p>
+          <p><Link to="/todo" >Todo</Link></p>
         </Grid>
       </Grid>
     </form>
